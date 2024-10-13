@@ -1,6 +1,9 @@
-use chrono::DateTime;
+use chrono::{DateTime, NaiveDate};
 use reqwest::blocking;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use super::TrashType;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Event {
@@ -18,7 +21,7 @@ struct AdliswilWaste {
     results: AdliswilWasteInfo,
 }
 
-pub fn get_trashes(from: DateTime<chrono::Utc>, to: DateTime<chrono::Utc>) -> Vec<super::Trash> {
+pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<TrashType>> {
     let client = blocking::Client::new();
 
     let url = format!(
@@ -30,7 +33,7 @@ pub fn get_trashes(from: DateTime<chrono::Utc>, to: DateTime<chrono::Utc>) -> Ve
 
     match response {
         Ok(r) => {
-            let mut result = Vec::new();
+            let mut result: HashMap<NaiveDate, Vec<TrashType>> = HashMap::new();
 
             let wastes: Result<AdliswilWaste, serde_json::Error> =
                 serde_json::from_str(&r.text().unwrap());
@@ -38,7 +41,8 @@ pub fn get_trashes(from: DateTime<chrono::Utc>, to: DateTime<chrono::Utc>) -> Ve
             match wastes {
                 Ok(waste_info) => {
                     for event in waste_info.results.events {
-                        if event.date >= from && event.date <= to {
+                        let naive = event.date.date_naive();
+                        if naive >= from && naive < to {
                             let trastype = match event.waste_type {
                                 1 => super::TrashType::NORMAL,
                                 2 => super::TrashType::BIO,
@@ -46,23 +50,23 @@ pub fn get_trashes(from: DateTime<chrono::Utc>, to: DateTime<chrono::Utc>) -> Ve
                                 4 => super::TrashType::PAPER,
                                 _ => super::TrashType::UNKNOWN,
                             };
-                            result.push(super::Trash {
-                                date: event.date,
-                                trastype,
-                            });
+                            result
+                                .entry(event.date.date_naive())
+                                .or_insert_with(Vec::new)
+                                .push(trastype);
                         }
                     }
                     return result;
                 }
                 Err(e) => {
                     println!("error {}", e);
-                    return Vec::new();
+                    return HashMap::new();
                 }
             };
         }
         Err(e) => {
             println!("error {}", e);
-            return Vec::new();
+            return HashMap::new();
         }
     }
 }

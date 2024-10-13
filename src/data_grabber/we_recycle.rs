@@ -1,8 +1,10 @@
-use chrono::{self, DateTime, Datelike, TimeZone};
+use super::TrashType;
+use chrono::{self, Datelike, NaiveDate};
 use regex::Regex;
 use reqwest::blocking::Client;
+use std::collections::HashMap;
 
-fn regex_caps_to_datetime(caps: &regex::Captures) -> Option<DateTime<chrono::Utc>> {
+fn regex_caps_to_datetime(caps: &regex::Captures) -> Option<NaiveDate> {
     let date = &caps[1];
 
     if let Some(regions) = caps.get(3) {
@@ -11,18 +13,13 @@ fn regex_caps_to_datetime(caps: &regex::Captures) -> Option<DateTime<chrono::Utc
             let naive_date =
                 chrono::NaiveDate::parse_from_str(&format!("{}{}", date, current_year), "%d.%m.%Y")
                     .ok()?;
-            let naive_time = chrono::NaiveTime::from_hms_opt(7, 0, 0)?;
-            let datetime = chrono::NaiveDateTime::new(naive_date, naive_time);
-            return chrono::Utc.from_local_datetime(&datetime).single();
+            return Some(naive_date);
         }
     }
-
     None
 }
 
-fn extract_dates_from_txt(
-    text: String,
-) -> Result<Vec<DateTime<chrono::Utc>>, Box<dyn std::error::Error>> {
+fn extract_dates_from_txt(text: String) -> Result<Vec<NaiveDate>, Box<dyn std::error::Error>> {
     let mut result = Vec::new();
 
     let date_pattern = r"(\d{1,2}\.\d{1,2}\.)";
@@ -65,17 +62,17 @@ fn download_pdf() -> Result<String, Box<dyn std::error::Error>> {
     return Ok(pdf_text);
 }
 
-pub fn get_trashes(from: DateTime<chrono::Utc>, to: DateTime<chrono::Utc>) -> Vec<super::Trash> {
+pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<TrashType>> {
     let we_recycle_schedule_text = download_pdf().unwrap();
     let extracted_dates = extract_dates_from_txt(we_recycle_schedule_text).unwrap();
 
-    let mut result = Vec::new();
+    let mut result = HashMap::new();
     for date in extracted_dates {
-        if date >= from && date <= to {
-            result.push(super::Trash {
-                date,
-                trastype: super::TrashType::WERECYLE,
-            });
+        if date >= from && date < to {
+            result
+                .entry(date)
+                .or_insert_with(Vec::new)
+                .push(TrashType::WERECYLE);
         }
     }
 

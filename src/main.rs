@@ -1,3 +1,4 @@
+use chrono::Datelike;
 use image::{GenericImage, Rgba, RgbaImage};
 use reqwest::blocking;
 use rusttype::{point, Font, Scale};
@@ -18,8 +19,8 @@ struct ChatInfo {
 fn grab_current_food_master_name() -> String {
     let client = blocking::Client::new();
 
-    let bot_token = "5013822196:AAEPswPRePxU4WT6ZIaxu1bBu4y_tM_TKdE";
-    let chat_id = "-922420335";
+    let bot_token = "***";
+    let chat_id = "***";
 
     // url format "https://api.telegram.org/bot{}/getChat?chat_id={}"
     let url = format!(
@@ -59,11 +60,11 @@ fn write_at(img: &mut RgbaImage, x: i32, y: i32, text: &str) {
 }
 
 fn main() {
-    let today = chrono::Utc::now();
+    let today = chrono::Local::now().naive_local().date();
     let next_week = today + chrono::Duration::weeks(5);
 
-    // Get the trashes from Adliswil
     let trashes_schedule = data_grabber::get_trashes(today, next_week);
+
     println!("{:?}", trashes_schedule);
 
     let mut img = RgbaImage::new(800, 480);
@@ -73,7 +74,7 @@ fn main() {
     }
 
     // Write text at position (100, 100)
-    let master_name = grab_current_food_master_name();
+    let master_name = trashes_schedule.master;
     write_at(&mut img, 100, 100, format!("{},", master_name).as_str());
     write_at(&mut img, 100, 200, "Don't forget to the trashes out!");
 

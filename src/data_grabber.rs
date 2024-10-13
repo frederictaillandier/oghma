@@ -1,6 +1,8 @@
 mod adliswil;
 mod we_recycle;
-use chrono::DateTime;
+use std::collections::HashMap;
+
+use chrono::NaiveDate;
 
 #[derive(Debug)]
 enum TrashType {
@@ -15,22 +17,18 @@ enum TrashType {
 }
 
 #[derive(Debug)]
-pub struct Trash {
-    date: DateTime<chrono::Utc>,
-    trastype: TrashType,
-}
-
-#[derive(Debug)]
 pub struct TrashesSchedule {
-    dates: Vec<Trash>,
-    master: String,
+    pub dates: HashMap<NaiveDate, Vec<TrashType>>,
+    pub master: String,
 }
 
-pub fn get_trashes(from: DateTime<chrono::Utc>, to: DateTime<chrono::Utc>) -> TrashesSchedule {
-    let mut dates = Vec::new();
+pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> TrashesSchedule {
+    let mut dates = adliswil::get_trashes(from, to);
+    let mut we_recycle = we_recycle::get_trashes(from, to);
 
-    dates.append(&mut we_recycle::get_trashes(from, to));
-    dates.append(&mut adliswil::get_trashes(from, to));
+    for (date, trashes) in we_recycle.drain() {
+        dates.entry(date).or_insert_with(Vec::new).extend(trashes);
+    }
 
     TrashesSchedule {
         dates,
