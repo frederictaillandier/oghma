@@ -1,33 +1,82 @@
-use std::fs::File;
-use std::io::prelude::*;
+use image::{GenericImage, Rgba, RgbaImage};
+use reqwest::blocking;
+use rusttype::{point, Font, Scale};
+use serde::Deserialize;
 
-fn main() -> std::io::Result<()> {
-    let mut file = File::create("foo.bmp")?;
+mod data_grabber;
 
-    let buffer: Vec<u8> = vec![
-        0x42, 0x4d, //magic start
-        0x46, 00, 00, 00, // size of the file
-        00, 00, 00, 00, // unused
-        0x36, 00, 00, 00, // offset to start of image data
-        0x28, 00, 00, 00, // size of the DIB header
-        0x2, 00, 00, 00, // width of the image
-        0x2, 00, 00, 00, // height of the image
-        0x1, 00, // number of color planes
-        0x18, 00, // number of bits per pixel
-        0, 00, 00, 00, // compression method
-        0x10, 00, 00, 00, // size of raw image data
-        00, 00, 00, 00, // horizontal resolution
-        00, 00, 00, 00, // vertical resolution
-        00, 00, 00, 00, // number of colors in the palette
-        00, 00, 00, 00, // number of important colors
-        0x00, 0x00, 0xFF, // blue
-        0x00, 0xFF, 0x00, // green
-        0x00, 0x00, // padding
-        0xFF, 0x00, 0x00, // red
-        0xFF, 0xFF, 0xFF, // white
-        0x00, 0x00, // padding
-    ];
+#[derive(Deserialize, Debug)]
+struct ChatResult {
+    result: ChatInfo,
+}
 
-    file.write_all(&buffer)?;
-    Ok(())
+#[derive(Deserialize, Debug)]
+struct ChatInfo {
+    title: String,
+}
+
+fn grab_current_food_master_name() -> String {
+    let client = blocking::Client::new();
+
+    let bot_token = "5013822196:AAEPswPRePxU4WT6ZIaxu1bBu4y_tM_TKdE";
+    let chat_id = "-922420335";
+
+    // url format "https://api.telegram.org/bot{}/getChat?chat_id={}"
+    let url = format!(
+        "https://api.telegram.org/bot{}/getChat?chat_id={}",
+        bot_token, chat_id
+    );
+
+    let response = client.get(url).send().unwrap().json::<ChatResult>();
+
+    match response {
+        Ok(response) => {
+            let mut chat_info = response.result;
+            chat_info.title.split_off(17)
+        }
+        Err(_) => "Error".to_string(),
+    }
+}
+
+fn write_at(img: &mut RgbaImage, x: i32, y: i32, text: &str) {
+    let font_data = include_bytes!("../opensans.ttf");
+    let font = Font::try_from_bytes(font_data as &[u8]).unwrap();
+    let scale = Scale { x: 50.0, y: 50.0 };
+    let position = point(x as f32, y as f32);
+    let glyphs: Vec<_> = font.layout(text, scale, position).collect();
+    for glyph in glyphs {
+        if let Some(bounding_box) = glyph.pixel_bounding_box() {
+            glyph.draw(|x, y, v| {
+                let x = x as i32 + bounding_box.min.x;
+                let y = y as i32 + bounding_box.min.y;
+                if x >= 0 && x < img.width() as i32 && y >= 0 && y < img.height() as i32 {
+                    let alpha = (v * 255.0) as u8;
+                    img.blend_pixel(x as u32, y as u32, Rgba([0, 0, 0, alpha]));
+                }
+            });
+        }
+    }
+}
+
+fn main() {
+    let today = chrono::Utc::now();
+    let next_week = today + chrono::Duration::weeks(5);
+
+    // Get the trashes from Adliswil
+    let trashes_schedule = data_grabber::get_trashes(today, next_week);
+    println!("{:?}", trashes_schedule);
+
+    let mut img = RgbaImage::new(800, 480);
+    // Set background color (white)
+    for pixel in img.pixels_mut() {
+        *pixel = Rgba([255, 255, 255, 255]);
+    }
+
+    // Write text at position (100, 100)
+    let master_name = grab_current_food_master_name();
+    write_at(&mut img, 100, 100, format!("{},", master_name).as_str());
+    write_at(&mut img, 100, 200, "Don't forget to the trashes out!");
+
+    // Save the image as "output.png"
+    img.save("output.bmp").unwrap();
 }
