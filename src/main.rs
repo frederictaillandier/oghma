@@ -19,7 +19,6 @@ fn main() {
     };
 
     let trashes_schedule = data_grabber::get_trashes(&config, today, until_date);
-    println!("{:?}", trashes_schedule);
     image_generator::generate(&trashes_schedule);
     telegram_writer::send_update(&config, &trashes_schedule);
 }
