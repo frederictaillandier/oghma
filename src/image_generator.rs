@@ -39,7 +39,7 @@ fn write_text(img: &mut RgbaImage, x: i32, y: i32, text: String) {
     }
 }
 
-pub fn generate(schedule: TrashesSchedule) {
+pub fn generate(schedule: &TrashesSchedule) {
     //open image
     /* In case we want to use one of the images as background
     let mut img = image::open("assets/backgrounds/12/2024-10-19_20-22-10_3722.png")
@@ -54,28 +54,20 @@ pub fn generate(schedule: TrashesSchedule) {
         *pixel = Rgba([255, 255, 255, 255]);
     }
 
-    let trashes_text = schedule
-        .dates
+    let tomorrow = chrono::Local::now().naive_local().date() + chrono::Duration::days(1);
+    let tomorrow_trashes = &schedule.dates[&tomorrow];
+    let trashes_text = tomorrow_trashes
         .iter()
-        .map(|(_, trashes)| {
-            format!(
-                "{}",
-                trashes.iter().fold(String::new(), |acc, trash| {
-                    format!("{}\n{}", acc, trash)
-                })
-            )
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
+        .fold(String::new(), |acc, trash| format!("{}{}", acc, trash));
 
     // Write text at position (100, 100)
-    let master_name = schedule.master;
+    let master_name = &schedule.master;
     write_text(
         &mut img,
         10,
         100,
         format!(
-            "{},\nDon't forget to take out the{}\nbefore tomorrow 7am.",
+            "{},\nDon't forget to take out the\n{}\nbefore tomorrow 7am.",
             master_name, trashes_text
         ),
     );
