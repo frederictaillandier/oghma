@@ -3,18 +3,24 @@ use reqwest::blocking;
 
 use super::data_grabber::TrashesSchedule;
 
-fn weekly_update(config: &super::config::Config, schedule: &TrashesSchedule) {
+fn send(bot: &str, channel: &str, message: &str) {
     let client = blocking::Client::new();
-
-    let global_chat_update_txt = format!("The new food master is {}.", schedule.master);
-
-    let group_update = format!(
+    let url = format!(
         "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}",
+        bot,
+        channel,
+        message.replace("\n", "%0A")
+    );
+    let _response = client.post(&url).send().unwrap();
+}
+
+fn weekly_update(config: &super::config::Config, schedule: &TrashesSchedule) {
+    let global_chat_update_txt = format!("The new food master is {}.", schedule.master);
+    send(
         &config.bot_token,
         &config.flatmates[0],
-        global_chat_update_txt.replace("\n", "%0A")
+        &global_chat_update_txt,
     );
-    let _response = client.get(&group_update).send().unwrap();
 
     let mut master_update_txt = String::new();
     for i in 1..8 {
@@ -35,27 +41,23 @@ fn weekly_update(config: &super::config::Config, schedule: &TrashesSchedule) {
         "Hello {}!\nYou are the new food master.\nThis week you need to put these trashes in front of the house before 7am.\nHere is the schedule:\n{}Have a nice evening!",
         schedule.master, master_update_txt
     );
-
-    let master_update = format!(
-        "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}",
-        &config.bot_token,
-        &config.flatmates[1],
-        master_update_txt.replace("\n", "%0A")
-    );
-
-    // send
-    let _response = client.post(&master_update).send().unwrap();
-
-    println!("url: {}", master_update);
+    send(&config.bot_token, &config.flatmates[1], &master_update_txt);
 }
 
 fn daily_update(config: &super::config::Config, schedule: &TrashesSchedule) {
-    let client = blocking::Client::new();
-
     let tomorrow = chrono::Local::now().naive_local().date() + chrono::Duration::days(1);
     let trashes = schedule.dates.get(&tomorrow);
     match trashes {
-        None => return,
+        None => {
+            send(
+                &config.bot_token,
+                &config.flatmates[1],
+                &format!(
+                    "Hi {}\nNo trashes tomorrow!\nHave a nice evening.",
+                    schedule.master
+                ),
+            );
+        }
         Some(trashes) => {
             let trashes_str = trashes
                 .iter()
@@ -64,15 +66,7 @@ fn daily_update(config: &super::config::Config, schedule: &TrashesSchedule) {
                 "Hello {} !\nDon't forget the{} trashes out before tomorrow morning! Have a nice evening!",
                 schedule.master, trashes_str
             );
-
-            let daily_update = format!(
-                "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}",
-                &config.bot_token,
-                &config.flatmates[1],
-                daily_update_txt.replace("\n", "%0A")
-            );
-            println!("url: {}", daily_update);
-            let _response = client.post(&daily_update).send().unwrap();
+            send(&config.bot_token, &config.flatmates[1], &daily_update_txt);
         }
     }
 }
