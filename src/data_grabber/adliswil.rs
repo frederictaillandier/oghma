@@ -42,7 +42,7 @@ pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<Tra
                 Ok(waste_info) => {
                     for event in waste_info.results.events {
                         let naive = event.date.date_naive();
-                        if naive >= from && naive < to {
+                        if naive > from && naive <= to {
                             let trastype = match event.waste_type {
                                 1 => super::TrashType::NORMAL,
                                 2 => super::TrashType::BIO,
