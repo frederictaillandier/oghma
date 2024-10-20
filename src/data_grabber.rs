@@ -8,14 +8,12 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum TrashType {
-    WERECYLE,
-    NORMAL,
-    BIO,
-    CARDBOARD,
-    PAPER,
-    UNKNOWN,
-    UNKNOWN2,
-    HAZARD,
+    WeRecycle,
+    Normal,
+    Bio,
+    Cardboard,
+    Paper,
+    Unknown,
 }
 
 #[derive(Deserialize, Debug)]
@@ -31,14 +29,12 @@ struct ChatInfo {
 impl fmt::Display for TrashType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TrashType::WERECYLE => write!(f, "WeRecycle"),
-            TrashType::NORMAL => write!(f, "Normal"),
-            TrashType::BIO => write!(f, "Bio"),
-            TrashType::CARDBOARD => write!(f, "Cardboard"),
-            TrashType::PAPER => write!(f, "Paper"),
-            TrashType::UNKNOWN => write!(f, "Unknown"),
-            TrashType::UNKNOWN2 => write!(f, "Unknown2"),
-            TrashType::HAZARD => write!(f, "Hazard"),
+            TrashType::WeRecycle => write!(f, "WeRecycle"),
+            TrashType::Normal => write!(f, "Normal"),
+            TrashType::Bio => write!(f, "Bio"),
+            TrashType::Cardboard => write!(f, "Cardboard"),
+            TrashType::Paper => write!(f, "Paper"),
+            _ => write!(f, "Unknown"),
         }
     }
 }
@@ -82,7 +78,7 @@ pub fn get_trashes(
     let mut we_recycle = we_recycle::get_trashes(from, to);
 
     for (date, trashes) in we_recycle.drain() {
-        dates.entry(date).or_insert_with(Vec::new).extend(trashes);
+        dates.entry(date).or_default().extend(trashes);
     }
 
     TrashesSchedule {

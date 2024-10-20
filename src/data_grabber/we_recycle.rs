@@ -59,7 +59,7 @@ fn download_pdf() -> Result<String, Box<dyn std::error::Error>> {
 
     let pdf_bytes = pdf_response.bytes()?;
     let pdf_text = pdf_extract::extract_text_from_mem(&pdf_bytes)?;
-    return Ok(pdf_text);
+    Ok(pdf_text)
 }
 
 pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<TrashType>> {
@@ -72,7 +72,7 @@ pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<Tra
             result
                 .entry(date)
                 .or_insert_with(Vec::new)
-                .push(TrashType::WERECYLE);
+                .push(TrashType::WeRecycle);
         }
     }
 

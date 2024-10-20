@@ -1,5 +1,5 @@
 use super::data_grabber::TrashesSchedule;
-use image::{GenericImage, Rgba, RgbaImage};
+use image::{Rgba, RgbaImage};
 use rusttype::{point, Font, Scale};
 
 fn write_at(img: &mut RgbaImage, x: i32, y: i32, text: &str) {
@@ -10,21 +10,13 @@ fn write_at(img: &mut RgbaImage, x: i32, y: i32, text: &str) {
     let glyphs: Vec<_> = font.layout(text, scale, position).collect();
     for glyph in glyphs {
         if let Some(bounding_box) = glyph.pixel_bounding_box() {
-            /*glyph.draw(|x, y, v| {
-                let x = x as i32 + bounding_box.min.x;
-                let y = y as i32 + bounding_box.min.y;
-                if x >= 0 && x < img.width() as i32 && y >= 0 && y < img.height() as i32 {
-                    let alpha = (v * 255.0) as u8;
-                    img.blend_pixel((x - 1) as u32, (y - 1) as u32, Rgba([0, 0, 0, alpha]));
-                    img.blend_pixel((x + 1) as u32, (y + 1) as u32, Rgba([0, 0, 0, alpha]));
-                }
-            });*/
             glyph.draw(|x, y, v| {
-                let x = x as i32 + bounding_box.min.x;
-                let y = y as i32 + bounding_box.min.y;
-                if x >= 0 && x < img.width() as i32 && y >= 0 && y < img.height() as i32 {
+                let x = x + bounding_box.min.x as u32;
+                let y = y + bounding_box.min.y as u32;
+                if x < img.width() && y < img.height() {
                     let alpha = (v * 255.0) as u8;
-                    img.blend_pixel((x) as u32, (y) as u32, Rgba([0, 0, 0, alpha]));
+                    let pix = img.get_pixel_mut(x, y);
+                    pix.0 = [0, 0, 0, alpha];
                 }
             });
         }

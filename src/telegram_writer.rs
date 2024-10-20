@@ -32,7 +32,7 @@ fn weekly_update(config: &super::config::Config, schedule: &TrashesSchedule) {
                 let trashes_str = trashes
                     .iter()
                     .fold(String::new(), |acc, trash| format!("{} {}", acc, trash));
-                let day_update = format!("{} on {},\n", trashes_str, date.weekday().to_string());
+                let day_update = format!("{} on {},\n", trashes_str, date.weekday());
                 master_update_txt.push_str(&day_update);
             }
         }
@@ -73,7 +73,7 @@ fn daily_update(config: &super::config::Config, schedule: &TrashesSchedule) {
 
 pub fn send_update(config: &super::config::Config, schedule: &TrashesSchedule) {
     if chrono::Local::now().naive_local().weekday() == chrono::Weekday::Sun {
-        weekly_update(config, &schedule);
+        weekly_update(config, schedule);
     }
     daily_update(config, schedule);
 }
