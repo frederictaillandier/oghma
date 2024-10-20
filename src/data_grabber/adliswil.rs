@@ -44,29 +44,29 @@ pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<Tra
                         let naive = event.date.date_naive();
                         if naive > from && naive <= to {
                             let trastype = match event.waste_type {
-                                1 => super::TrashType::NORMAL,
-                                2 => super::TrashType::BIO,
-                                3 => super::TrashType::CARDBOARD,
-                                4 => super::TrashType::PAPER,
-                                _ => super::TrashType::UNKNOWN,
+                                1 => super::TrashType::Normal,
+                                2 => super::TrashType::Bio,
+                                3 => super::TrashType::Cardboard,
+                                4 => super::TrashType::Paper,
+                                _ => super::TrashType::Unknown,
                             };
                             result
                                 .entry(event.date.date_naive())
-                                .or_insert_with(Vec::new)
+                                .or_default()
                                 .push(trastype);
                         }
                     }
-                    return result;
+                    result
                 }
                 Err(e) => {
                     println!("error {}", e);
-                    return HashMap::new();
+                    HashMap::new()
                 }
-            };
+            }
         }
         Err(e) => {
             println!("error {}", e);
-            return HashMap::new();
+            HashMap::new()
         }
     }
 }
