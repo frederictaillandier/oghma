@@ -63,9 +63,7 @@ fn grab_current_food_master_name(config: &super::config::Config) -> String {
         bot_token, chat_id
     );
 
-    println!("url: {}", url);
     let response = client.get(url).send().unwrap().json::<ChatResult>();
-
     match response {
         Ok(response) => {
             let mut chat_info = response.result;
