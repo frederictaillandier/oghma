@@ -1,5 +1,5 @@
 use super::data_grabber::TrashesSchedule;
-use image::{Rgba, RgbaImage};
+use image::{Pixel, Rgba, RgbaImage};
 use rusttype::{point, Font, Scale};
 
 fn write_at(img: &mut RgbaImage, x: i32, y: i32, text: &str) {
@@ -16,7 +16,8 @@ fn write_at(img: &mut RgbaImage, x: i32, y: i32, text: &str) {
                 if x < img.width() && y < img.height() {
                     let alpha = (v * 255.0) as u8;
                     let pix = img.get_pixel_mut(x, y);
-                    pix.0 = [0, 0, 0, alpha];
+
+                    pix.blend(&Rgba([0, 0, 0, alpha]));
                 }
             });
         }
