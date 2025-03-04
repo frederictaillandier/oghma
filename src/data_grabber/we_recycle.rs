@@ -46,10 +46,9 @@ fn download_pdf() -> Result<String, Box<dyn std::error::Error>> {
         .timeout(std::time::Duration::from_secs(5))
         .build()?;
     let response = client.get(url).send()?;
-
     let body = response.text()?;
-    let re = Regex::new(r#"href="([^"]+\.pdf)""#)?;
-    let caps = re
+    let regex = Regex::new(r#"href="([^"]+\.pdf)""#)?;
+    let caps = regex
         .captures(&body)
         .ok_or("pdf url could not be found in we-recyle page")?;
 

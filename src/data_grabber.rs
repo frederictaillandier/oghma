@@ -13,7 +13,6 @@ pub enum TrashType {
     Bio,
     Cardboard,
     Paper,
-    Unknown,
 }
 
 #[derive(Deserialize, Debug)]
@@ -34,7 +33,6 @@ impl fmt::Display for TrashType {
             TrashType::Bio => write!(f, "Bio"),
             TrashType::Cardboard => write!(f, "Cardboard"),
             TrashType::Paper => write!(f, "Paper"),
-            _ => write!(f, "Unknown"),
         }
     }
 }
@@ -47,13 +45,11 @@ pub struct TrashesSchedule {
 
 fn grab_current_food_master_name(config: &super::config::Config) -> String {
     let client = blocking::Client::new();
-    // get bot token from env
 
     let bot_token = &config.bot_token;
     let chat_id = &config.flatmates
         [2 + chrono::Local::now().iso_week().week0() as usize % config.flatmates.len()];
 
-    // url format "https://api.telegram.org/bot{}/getChat?chat_id={}"
     let url = format!(
         "https://api.telegram.org/bot{}/getChat?chat_id={}",
         bot_token, chat_id

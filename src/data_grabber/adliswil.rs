@@ -48,7 +48,7 @@ pub fn get_trashes(from: NaiveDate, to: NaiveDate) -> HashMap<NaiveDate, Vec<Tra
                                 2 => super::TrashType::Bio,
                                 3 => super::TrashType::Cardboard,
                                 4 => super::TrashType::Paper,
-                                _ => super::TrashType::Unknown,
+                                _ => continue,
                             };
                             result
                                 .entry(event.date.date_naive())
