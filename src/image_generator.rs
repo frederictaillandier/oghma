@@ -67,6 +67,4 @@ pub fn generate(schedule: &TrashesSchedule) {
             img.save("output.bmp").unwrap();
         }
     }
-
-    // Save the image as "output.png"
 }
