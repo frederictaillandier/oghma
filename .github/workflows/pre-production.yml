@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build -r --verbose
+        run: cargo build -r
       - name: Run
-        run: cargo run --verbose
+        run: cargo run
         env:
           GSTALDERCONFIG: ${{ secrets.GSTALDERCONFIG_TEST }}
